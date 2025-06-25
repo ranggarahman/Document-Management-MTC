@@ -1,103 +1,114 @@
+// src/app/page.tsx
+"use client";
+
+import { useDocuments } from "./hooks/useDocuments";
+import { SearchBar } from "./components/SearchBar";
+import { useState } from "react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import DocumentSearchResult from "./components/DocumentSearchResult";
 import Image from "next/image";
+import { UploadDocumentModal } from "./components/upload/DocumentUploadModal";
+import { Document } from "@/lib/types";
 
-export default function Home() {
+export default function HomePage() {
+  const { documents, loading, error, addDocumentLocally, fetchDocuments } = useDocuments();
+  const [searchQuery, setSearchQuery] = useState("");
+  //const toastId = useRef<string | number | null>(null); // To keep track of the toast ID
+
+  // --- STATE FOR THE MODAL ---
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // --- A FUNCTION TO REFRESH DATA AFTER UPLOAD ---
+  // In a real app, this would re-fetch the list of documents
+  const handleUploadSuccess = (newDocument: Document) => {
+    console.log("Upload successful, new document:", newDocument);
+    // Optimistically update the UI
+    addDocumentLocally(newDocument);
+    // You could still trigger a full refetch if needed, e.g., to re-sort the list
+    // fetchDocuments(currentSearchTerm); 
+  };
+
+  const handleAddNewDocument = () => {
+    setIsModalOpen(true); 
+  };
+
+  const handleSearch = (query: string) => {
+    const trimmedQuery = query.trim();
+
+    // Optional: only trigger if it's at least 2 characters long
+    const isValidQuery = trimmedQuery.length >= 2;
+
+    // Save the raw input (useful for UI binding)
+    setSearchQuery(query);
+
+    // Only fetch if it’s a valid search term
+    if (isValidQuery) {
+      fetchDocuments(trimmedQuery);
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+    <main className="min-h-screen p-8">
+      <div className="w-full flex justify-between items-center">
         <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
+          src="/10aris.png"
+          alt="Tenaris Logo"
+          width={200}
+          height={50}
+          style={{ objectFit: "contain" }}
           priority
+          className="w-[200px] h-[50px]"
         />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+        <h2 className="text-tenaris-purple-hover text-sm">
+          <strong>©️Maintenance TenarisSPIJ</strong>
+        </h2>
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      <header className="mb-8 text-center">
+        <h1 className="text-4xl font-bold text-tenaris-blue-dark">
+          Drawing Document Management Central
+        </h1>
+        <p className="mt-2 text-lg text-tenaris-gray-dark">
+          Find Document... 📝
+        </p>
+      </header>
+
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        <SearchBar onSearch={handleSearch} />
+        <button
+          onClick={handleAddNewDocument}
+          className="whitespace-nowrap rounded-lg bg-green-600 px-6 py-2 font-semibold text-white shadow-md transition duration-200 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          Add New Document
+        </button>
+      </div>
+
+      {/* --- RENDER THE MODAL --- */}
+      <UploadDocumentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onUploadSuccess={handleUploadSuccess}
+      />
+
+      <DocumentSearchResult
+        loading={loading}
+        error={error ?? undefined}
+        documents={documents}
+        searchQuery={searchQuery}
+      />
+
+      <ToastContainer
+        position="top-right" // You can change the position
+        autoClose={3000} // How long toasts stay
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+    </main>
   );
 }
