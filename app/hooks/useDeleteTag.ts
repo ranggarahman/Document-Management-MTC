@@ -42,7 +42,7 @@ export function useDeleteTag(): UseDeleteTagResult {
       if (err instanceof Error) {
         setError(err);
       } else {
-        setError(new Error("An unknown error occurred while deleting the tag"));
+        setError(new Error("An unknownz error occurred while deleting the tag"));
       }
       return false; // Failed to delete tag
     } finally {

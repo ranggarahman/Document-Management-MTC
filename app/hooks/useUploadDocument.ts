@@ -13,7 +13,7 @@ export interface DocumentFormData {
 }
 
 interface UseUploadDocumentResult {
-  uploadDocument: (file: File, data: DocumentFormData) => Promise<boolean>;
+  uploadDocument: (file: File, data: DocumentFormData) => Promise<number>;
   isLoading: boolean;
   error: string | null;
 }
@@ -28,7 +28,7 @@ export function useUploadDocument(
   const uploadDocument = async (
     file: File,
     data: DocumentFormData
-  ): Promise<boolean> => {
+  ): Promise<number > => {
     setIsLoading(true);
     setError(null);
 
@@ -62,7 +62,8 @@ export function useUploadDocument(
       // Trigger the success callback with the full document object
       onUploadSuccess(result);
       
-      return true; // Indicate success
+       // NEW: Return the ID from the successful result object
+      return result.id;
 
     } catch (err: unknown) {
       let errorMessage = "Failed to upload file.";
@@ -71,7 +72,7 @@ export function useUploadDocument(
       }
       setError(errorMessage);
       toast.error(`ERROR: '${errorMessage}'`);
-      return false; // Indicate failure
+      return 0; // Indicate failure
     } finally {
       setIsLoading(false);
     }

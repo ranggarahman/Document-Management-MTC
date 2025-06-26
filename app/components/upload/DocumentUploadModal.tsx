@@ -1,13 +1,14 @@
 import { useState, useRef, useCallback, DragEvent, FC } from "react";
 import { X, File as FileIcon } from "lucide-react";
-// import { toast } from "react-toastify";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-toastify";
 import { Document } from "@/lib/types";
 import { useUploadDocument } from "../../hooks/useUploadDocument";
 import FormBody from "./DocumentUploadModalFormBody";
 import { ALLOWED_FILE_TYPES, MAX_FILE_SIZE, FORM_ID } from "@/lib/utils";
 import DragDropArea from "./DragDropArea";
 import { UploadModalFooter } from "./UploadModalFooter";
-import { DocumentFormData } from "../../hooks/useUploadDocument";
+import { useAddTag } from "@/app/hooks/useAddTags";
 
 // Define the props the component will accept
 interface UploadDocumentModalProps {
@@ -29,8 +30,20 @@ export const UploadDocumentModal: FC<UploadDocumentModalProps> = ({
   const [description, setDescription] = useState("");
   const [discipline, setDiscipline] = useState("");
   const [contractors, setContractors] = useState("");
+  // --- NEW: State for Tags ---
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
+  // ... inside YourModalComponent
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isFormInvalid =
+    !file ||
+    !createdBy ||
+    !drawingName ||
+    !description ||
+    !discipline ||
+    !contractors.length;
 
   const handleClose = () => {
     // Reset component-specific state
@@ -40,16 +53,26 @@ export const UploadDocumentModal: FC<UploadDocumentModalProps> = ({
     onClose();
   };
 
-  // --- USE THE HOOK ---
   // The hook handles API loading, API error, and the success callback logic
   const {
     uploadDocument,
-    isLoading,
-    error: apiError,
+    isLoading: isUploadingDoc, // Rename to avoid conflict
+    error: docApiError,
   } = useUploadDocument((newDocument) => {
-    onUploadSuccess(newDocument); // Propagate success to the parent page
-    handleClose(); // Close the modal on success
+    onUploadSuccess(newDocument); // Propagate success to parent
+    handleClose(); // Close the modal
   });
+
+  // 2. Instantiate the TAG hook
+  const {
+    addTag,
+    isLoading: isAddingTags, // Rename to avoid conflict
+    error: tagApiError,
+  } = useAddTag();
+
+  // 3. Combine loading states for the submit button
+  const isLoading = isUploadingDoc || isAddingTags;
+  const apiError = docApiError || tagApiError || validationError;
 
   const validateAndSetFile = useCallback((selectedFile: File) => {
     setValidationError(null);
@@ -97,42 +120,95 @@ export const UploadDocumentModal: FC<UploadDocumentModalProps> = ({
   };
 
   // --- UPDATE THE SUBMIT HANDLER ---
-  // It is now much cleaner and only handles form validation.
-  const handleSubmit = async (e: React.FormEvent) => {
+  // --- SUBMIT HANDLER ---
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // --- Validation Checks ---
     if (!file) {
       setValidationError("Please select a file to upload.");
       return;
     }
-    if (!createdBy.trim()) {
-      setValidationError("Please enter the name of the uploader.");
-      return;
-    }
+    // ... other validation checks
 
-    //DOCUMENT SUBMIT CALL
+    setValidationError(null);
 
-        // Create the data object that matches the DocumentFormData interface
-    const formData: DocumentFormData = {
+    // --- API CALLS ---
+
+    // Create the data object for the main document
+    const documentData = {
       drawingName,
       description,
       discipline,
       contractors,
       createdBy,
     };
-    
-    // Call the hook with both the file and the form data object
-    await uploadDocument(file, formData);
+
+    // STEP 1: Call the upload hook and AWAIT THE ID
+    const newDocumentId = await uploadDocument(file, documentData);
+
+    // STEP 2: If the upload was successful (ID is not null), upload the tags
+    if (newDocumentId) {
+      // If there are no tags, we are done! The onUploadSuccess will have already fired.
+      if (tags.length === 0) {
+        console.log("Document uploaded successfully without any tags.");
+        toast.success("Document was uploaded with no tags.");
+        return;
+      }
+
+      console.log(
+        `Document created with ID: ${newDocumentId}. Now adding ${tags.length} tags.`
+      );
+
+      // Use Promise.all to add all tags concurrently
+      const tagPromises = tags.map((tag) => addTag(newDocumentId, tag));
+      const results = await Promise.all(tagPromises);
+
+      if (results.includes(false)) {
+        // You can optionally show a non-blocking warning that some tags failed
+        toast.warn("Document was uploaded, but some tags could not be saved.");
+      } else {
+        console.log("All tags added successfully.");
+      }
+
+      // The onUploadSuccess callback (which closes the modal) has already been called
+      // by the useUploadDocument hook, so we don't need to do anything else here.
+    }
+  };
+
+  const handleTagInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    const value = e.target.value;
+    setTagInput(value);
+
+    // If a comma is detected, create the tag
+    if (value.endsWith(",")) {
+      const newTag = value.slice(0, -1).trim();
+      if (newTag && !tags.includes(newTag)) {
+        setTags([...tags, newTag]);
+      }
+      // Clear the input for the next tag
+      setTagInput("");
+    }
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // On backspace, if the input is empty, delete the last tag
+    if (e.key === "Backspace" && tagInput === "" && tags.length > 0) {
+      setTags(tags.slice(0, -1));
+    }
+  };
+
+  interface RemoveTagFn {
+    (tagToRemove: string): void;
+  }
+
+  const removeTag: RemoveTagFn = (tagToRemove) => {
+    setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
   if (!isOpen) return null;
-
-  const isFormInvalid =
-    !file ||
-    !createdBy ||
-    !drawingName ||
-    !description ||
-    !discipline ||
-    !contractors.length;
 
   return (
     <div
@@ -179,6 +255,49 @@ export const UploadDocumentModal: FC<UploadDocumentModalProps> = ({
 
               {/* Column 2: DragDropArea */}
               <div className="w-full md:w-1/2 mt-6 md:mt-0">
+                {/* --- NEW: TAGS INPUT FIELD --- */}
+                <div className="mb-4">
+                  <label
+                    htmlFor="tags"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Tags (separated by a comma)
+                  </label>
+                  <div className="flex flex-wrap items-center gap-2 p-2 border border-gray-300 rounded-md shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+                    <AnimatePresence>
+                      {tags.map((tag) => (
+                        <motion.span
+                          key={tag}
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.5 }}
+                          transition={{ duration: 0.2, ease: "easeOut" }}
+                          className="flex items-center gap-1.5 bg-indigo-100 text-indigo-700 text-sm font-medium px-3 py-1 rounded-full"
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                            className="text-indigo-500 rounded-full hover:bg-indigo-200 hover:text-indigo-800"
+                            aria-label={`Remove ${tag}`}
+                          >
+                            <X size={14} />
+                          </button>
+                        </motion.span>
+                      ))}
+                    </AnimatePresence>
+                    <input
+                      id="tags"
+                      type="text"
+                      value={tagInput}
+                      onChange={handleTagInputChange}
+                      onKeyDown={handleTagKeyDown}
+                      className="flex-1 min-w-[80px] p-0 focus:ring-0 text-sm text-gray-900 placeholder-gray-500"
+                      placeholder={tags.length === 0 ? "Add tags..." : ""}
+                    />
+                  </div>
+                </div>
+                {/* --- END OF NEW TAGS INPUT FIELD --- */}
                 <DragDropArea
                   handleDragEnter={handleDragEnter}
                   handleDragLeave={handleDragLeave}
@@ -208,9 +327,9 @@ export const UploadDocumentModal: FC<UploadDocumentModalProps> = ({
               </div>
             )}
             {/* Error Message Display */}
-            {(validationError || apiError) && (
+            {apiError && (
               <p className="text-sm text-center text-red-600">
-                {validationError || apiError}
+                {apiError.toString()}
               </p>
             )}
             {/* Footer with Actions */}
