@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { Document } from "@/lib/types";
 import { useUploadDocument } from "../../hooks/useUploadDocument";
 import FormBody from "./DocumentUploadModalFormBody";
-import { ALLOWED_FILE_TYPES, MAX_FILE_SIZE, FORM_ID } from "@/lib/utils";
+import { MAX_FILE_SIZE, FORM_ID } from "@/lib/utils";
 import DragDropArea from "./DragDropArea";
 import { UploadModalFooter } from "./UploadModalFooter";
 import { useAddTag } from "@/app/hooks/useAddTags";
@@ -41,9 +41,7 @@ export const UploadDocumentModal: FC<UploadDocumentModalProps> = ({
     !file ||
     !createdBy ||
     !drawingName ||
-    !description ||
-    !discipline ||
-    !contractors.length;
+    !description
 
   const handleClose = () => {
     // Reset component-specific state
@@ -76,13 +74,13 @@ export const UploadDocumentModal: FC<UploadDocumentModalProps> = ({
 
   const validateAndSetFile = useCallback((selectedFile: File) => {
     setValidationError(null);
-    if (!ALLOWED_FILE_TYPES.includes(selectedFile.type)) {
-      setValidationError(
-        `Invalid file type. Please upload a PDF, JPG, PNG, GIF, or TIFF.`
-      );
-      setFile(null);
-      return;
-    }
+    // if (!ALLOWED_FILE_TYPES.includes(selectedFile.type)) {
+    //   setValidationError(
+    //     `Invalid file type. Please upload a PDF, JPG, PNG, GIF, or TIFF.`
+    //   );
+    //   setFile(null);
+    //   return;
+    // }
     if (selectedFile.size > MAX_FILE_SIZE * 1024 * 1024) {
       setValidationError(`File is too large. Max size is ${MAX_FILE_SIZE}MB.`);
       return;
@@ -130,6 +128,9 @@ export const UploadDocumentModal: FC<UploadDocumentModalProps> = ({
       return;
     }
     // ... other validation checks
+
+    setContractors(contractors.trim() === '' ? 'N/A' : contractors)
+
 
     setValidationError(null);
 
@@ -187,6 +188,8 @@ export const UploadDocumentModal: FC<UploadDocumentModalProps> = ({
       const newTag = value.slice(0, -1).trim();
       if (newTag && !tags.includes(newTag)) {
         setTags([...tags, newTag]);
+      } else {
+        toast.error("You have already included this tag.");
       }
       // Clear the input for the next tag
       setTagInput("");
@@ -197,6 +200,26 @@ export const UploadDocumentModal: FC<UploadDocumentModalProps> = ({
     // On backspace, if the input is empty, delete the last tag
     if (e.key === "Backspace" && tagInput === "" && tags.length > 0) {
       setTags(tags.slice(0, -1));
+    }
+
+    // --- START: Added Logic ---
+    // On Enter, create the tag
+    if (e.key === "Enter") {
+      // Prevent the default action (e.g., submitting a form)
+      e.preventDefault();
+
+      // Trim whitespace from the input to get the new tag
+      const newTag = tagInput.trim();
+
+      // Add the tag if it's not empty and not already in the list
+      if (newTag && !tags.includes(newTag)) {
+        setTags([...tags, newTag]);
+      } else {
+        toast.error("You have already included this tag.");
+      }
+
+      // Clear the input for the next tag
+      setTagInput("");
     }
   };
 
@@ -292,7 +315,7 @@ export const UploadDocumentModal: FC<UploadDocumentModalProps> = ({
                       value={tagInput}
                       onChange={handleTagInputChange}
                       onKeyDown={handleTagKeyDown}
-                      className="flex-1 min-w-[80px] p-0 focus:ring-0 text-sm text-gray-900 placeholder-gray-500"
+                      className="flex-1 min-w-[80px] p-2 focus:ring-0 text-sm text-gray-900 placeholder-gray-500"
                       placeholder={tags.length === 0 ? "Add tags..." : ""}
                     />
                   </div>
@@ -338,7 +361,7 @@ export const UploadDocumentModal: FC<UploadDocumentModalProps> = ({
               onCancel={handleClose}
               isLoading={isLoading}
               isSubmitDisabled={isFormInvalid}
-              submitText="Upload Drawing"
+              submitText="Upload Document"
               loadingText="Uploading..."
             />
           </form>

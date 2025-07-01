@@ -6,11 +6,11 @@ import { Document } from "@/lib/types";
 import { useTags } from "../hooks/useTags";
 import { Tag } from "./Tag";
 import { AddTagForm } from "./AddTagForm";
-import { extractPdfPath } from "@/lib/types";
+//import { extractPdfPath } from "@/lib/types";
 
 interface DocumentRowProps {
   doc: Document;
-  onPreviewClick: (pdfPath: string) => void;
+  onPreviewClick: (doc: Document) => void;
 }
 
 const formatSize = (bytes: number) => {
@@ -85,7 +85,7 @@ export function DocumentRow({ doc, onPreviewClick }: DocumentRowProps) {
         <div className="flex items-start gap-4">
           <AddTagForm drawingId={doc.id} onTagAdded={addLocalTag} />
           <button
-            onClick={() => onPreviewClick(extractPdfPath(doc.path))}
+            onClick={() => onPreviewClick(doc)}
             className="font-semibold text-tenaris-accent hover:underline whitespace-nowrap" // Added whitespace-nowrap
           >
             Preview

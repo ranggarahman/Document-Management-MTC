@@ -1,4 +1,4 @@
-import { ALLOWED_FILE_TYPES, MAX_FILE_SIZE } from "@/lib/utils";
+import { MAX_FILE_SIZE } from "@/lib/utils";
 import type { RefObject } from "react";
 import { UploadCloud } from "lucide-react";
 
@@ -47,7 +47,7 @@ const DragDropArea = ({
             or drag and drop
           </p>
           <p className="text-xs text-gray-500">
-            PDF, PNG, JPG, JPEG, GIF, TIF, TIFF up to {MAX_FILE_SIZE}MB
+            Any Kind of File up to {MAX_FILE_SIZE}MB. Just Kidding. Any size until server .142 storage runs out. 🤣
           </p>
           <input
             ref={fileInputRef}
@@ -56,7 +56,6 @@ const DragDropArea = ({
               e.target.files && validateAndSetFile(e.target.files[0])
             }
             className="hidden"
-            accept={ALLOWED_FILE_TYPES.join(",")}
           />
         </div>
       </div>

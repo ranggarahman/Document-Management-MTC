@@ -10,7 +10,7 @@ interface PdfTableProps {
 }
 
 export function PdfTable({ documents }: PdfTableProps) {
-  const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
+  const [selectedPdf, setSelectedPdf] = useState<Document | null>(null);
 
   // The parent component rendering the table
   return (
@@ -21,10 +21,10 @@ export function PdfTable({ documents }: PdfTableProps) {
           <thead className="border-b bg-tenaris-blue border-red-500">
             <tr>
               {/* Change 2: Defined widths for each column for a stable layout */}
-              <th className="px-6 py-4 w-[40%]">Name</th>
+              <th className="px-6 py-4 w-[30%]">Name</th>
               <th className="px-6 py-4 w-[15%]">Size</th>
               <th className="px-6 py-4 w-[30%]">Tags</th>
-              <th className="px-6 py-4 w-[15%]">Actions</th>
+              <th className="px-6 py-4 w-[25%]">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -40,7 +40,7 @@ export function PdfTable({ documents }: PdfTableProps) {
       </div>
       {selectedPdf && (
         <PdfPreviewModal
-          pdfUrl={selectedPdf}
+          doc={selectedPdf}
           onClose={() => setSelectedPdf(null)}
         />
       )}
