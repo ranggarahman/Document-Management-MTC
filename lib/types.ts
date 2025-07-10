@@ -23,3 +23,16 @@ export function extractPdfPath(fullPath: string): string {
   // Prepend the new public directory path
   return `/Drawing/${normalizedPath}`;
 }
+
+export function getFileExtension(path:string): string {
+  // Find the index of the last dot
+  const lastDotIndex = path.lastIndexOf('.');
+
+  // If there's no dot, or it's the first character (e.g., ".bashrc"), return an empty string
+  if (lastDotIndex === -1 || lastDotIndex === 0) {
+    return '';
+  }
+
+  // Return the part of the string after the last dot
+  return path.substring(lastDotIndex);
+};

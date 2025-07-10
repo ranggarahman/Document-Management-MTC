@@ -9,73 +9,58 @@ export function useDocuments() {
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // The core fetching logic is updated here.
+  // The core fetching logic remains simple, without the forced delay.
   const fetchDocuments = useCallback(async (searchQuery = "") => {
-    // This function is now called AFTER the debounce timer.
     setLoading(true);
-    setError(null); // Always clear previous errors on a new search.
+    setError(null);
 
     try {
-      // If the search query is empty, clear the results and stop.
       if (searchQuery.trim() === "") {
         setDocuments([]);
-        return; // Exit early
+        setLoading(false); // Ensure loading is turned off
+        return;
       }
 
-      // --- Start of the new logic ---
-
-      // 1. Create the API call promise.
-      const apiCallPromise = fetch(
+      const response = await fetch(
         `${API_ENDPOINT}/api/documents?search=${searchQuery}`
-      ).then(res => {
-        // Add robust error handling for bad HTTP responses
-        if (!res.ok) {
-          throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
-        }
-        return res.json();
-      });
+      );
 
-      // 2. Create the 1-second minimum delay promise.
-      const minDisplayTimePromise = new Promise(resolve => setTimeout(resolve, 1000));
+      if (!response.ok) {
+        throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+      }
 
-      // 3. Use Promise.all to wait for both to complete.
-      // The `await` will pause here until the API call is finished AND 1 second has passed.
-      const [data] = await Promise.all([apiCallPromise, minDisplayTimePromise]);
-
+      const data = await response.json();
       setDocuments(data);
-      
-      // --- End of the new logic ---
 
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
-      setDocuments([]); // Also clear documents on error for a clean state.
+      setDocuments([]);
     } finally {
-      // This `finally` block will only run after the `try/catch` is complete,
-      // which is after the `Promise.all` has resolved.
       setLoading(false);
     }
-  }, []); // useCallback has no dependencies as it only uses setter functions.
+  }, []); // No dependencies needed
 
-  // Your debounce implementation is perfect and does not need to change.
+  // Debounce logic is added back here.
   const debounceFetchDocuments = useCallback(
     (searchQuery: string) => {
+      // Clear the previous timeout if a new keystroke happens
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+      // Set a new timeout
       timeoutRef.current = setTimeout(() => {
         fetchDocuments(searchQuery);
-      }, 500); // 500ms debounce
+      }, 750); // 750ms debounce delay
     },
-    [fetchDocuments] // It correctly depends on the memoized fetchDocuments
+    [fetchDocuments] // Dependency on the memoized fetchDocuments function
   );
 
   /**
    * Adds a document to the local state without a network request.
-   * This is useful for making the UI feel responsive after an upload.
-   * It prepends the new document to the list.
    */
   const addDocumentLocally = (newDocument: Document) => {
     setDocuments((currentDocs) => [newDocument, ...currentDocs]);
   };
 
-  // We continue to export the debounced version.
+  // Export the debounced version for use in the UI.
   return { documents, loading, error, addDocumentLocally, fetchDocuments: debounceFetchDocuments };
 }

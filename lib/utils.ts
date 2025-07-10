@@ -9,4 +9,5 @@ export const DISCIPLINES = [
   "AUTOMATION",
   "PLANT",
   "CIVIL",
+  "GENERAL"
 ];

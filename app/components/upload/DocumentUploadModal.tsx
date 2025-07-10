@@ -245,7 +245,7 @@ export const UploadDocumentModal: FC<UploadDocumentModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-6 pt-6 pb-4">
           <h2 className="text-xl font-semibold text-gray-800">
-            Add New Document
+            Add New Document 📝
           </h2>
           <button
             onClick={handleClose}

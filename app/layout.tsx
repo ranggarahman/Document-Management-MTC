@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 // import { Geist, Geist_Mono } from "next/font/google";
 import { Mulish } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "./context/AuthContext";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -15,8 +16,8 @@ import "./globals.css";
 
 const mulish = Mulish({
   variable: "--font-sans-serif",
-  subsets: ["latin"]
-})
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "Drawing Document Management",
@@ -30,10 +31,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${mulish.variable} antialiased`}
-      >
-        {children}
+      <body className={`${mulish.variable} antialiased`}>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

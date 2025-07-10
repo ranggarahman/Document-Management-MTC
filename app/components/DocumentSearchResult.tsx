@@ -1,6 +1,5 @@
 import React from 'react';
 import Image from 'next/image';
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { PdfTable } from './PdfTable';
 import { Document } from '@/lib/types';
 
@@ -9,23 +8,22 @@ type SearchStateProps = {
   iconSrc: string;
   altText: string;
   message: string;
-  isLottie?: boolean;
+  isLoading?: boolean;
 };
 
 const SearchState: React.FC<SearchStateProps> = ({
   iconSrc,
   altText,
   message,
-  isLottie = false,
+  isLoading = false,
 }) => (
   <div className="flex flex-col items-center justify-center mt-8">
-    {isLottie ? (
-      <DotLottieReact
-        src={iconSrc}
-        loop
-        autoplay
-        className="w-[200px] h-[200px]"
-      />
+    {isLoading ? (
+      <div className="bouncing-dots">
+        <div />
+        <div />
+        <div />
+      </div>
     ) : (
       <Image
         src={iconSrc}
@@ -55,10 +53,10 @@ const DocumentSearchResult: React.FC<DocumentSearchProps> = ({ loading, error, d
   if (loading) {
     return (
       <SearchState
-        isLottie={true}
-        iconSrc="/search-loader.json"
-        altText="Loading results"
-        message="Finding document..." // Your new message!
+        isLoading={true} // Set loading to true
+        message="Finding document..."
+        iconSrc="" 
+        altText=""
       />
     );
   }
@@ -80,7 +78,7 @@ const DocumentSearchResult: React.FC<DocumentSearchProps> = ({ loading, error, d
   }
 
   // 4. Show "Not Found" message
-  if (documents.length === 0) {
+  if (documents.length === 0 && searchQuery.trim().length !== 0) {
     return (
       <SearchState
         iconSrc="/nobg.png"

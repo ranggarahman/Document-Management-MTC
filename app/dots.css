@@ -1,0 +1,32 @@
+.bouncing-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px; /* Match your image container height */
+}
+
+.bouncing-dots > div {
+  width: 16px;
+  height: 16px;
+  margin: 3px 6px;
+  border-radius: 50%;
+  background-color: #a3a3a3; /* Gray */
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.bouncing-dots .bounce1 {
+  animation-delay: -0.32s;
+}
+
+.bouncing-dots .bounce2 {
+  animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1.0);
+  }
+}

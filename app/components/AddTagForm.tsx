@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useAddTag } from "../hooks/useAddTags";
-import { toast } from 'react-toastify'; // Import toast
+import { toast } from "react-toastify"; // Import toast
 
 export function AddTagForm({
   drawingId,
@@ -25,7 +25,11 @@ export function AddTagForm({
         });
       } else {
         // Update existing toast if it's already showing
-        toast.update(toastId.current, { render: "Adding tag...", type: "info", isLoading: true });
+        toast.update(toastId.current, {
+          render: "Adding tag...",
+          type: "info",
+          isLoading: true,
+        });
       }
     } else {
       // If not loading, and there's a toast, update it to success or error
@@ -38,7 +42,8 @@ export function AddTagForm({
             autoClose: 5000, // Close error toast after 5 seconds
             closeButton: true,
           });
-        } else if (toastId.current && !isLoading) { // This condition will be true after success
+        } else if (toastId.current && !isLoading) {
+          // This condition will be true after success
           // If no error, it means success (handled by handleSubmit for immediate success)
           // We need to ensure this doesn't fire if the component unmounts quickly after success
           // The success toast is better handled directly in handleSubmit for immediate feedback
@@ -49,8 +54,8 @@ export function AddTagForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!tagInput.trim()) {
-      toast.warn("Tag cannot be empty!");
+    if (!tagInput.trim() || tagInput.trim().length > 45) {
+      toast.warn("Tag cannot be empty! or be more than 45 characters");
       return;
     }
 
@@ -76,7 +81,8 @@ export function AddTagForm({
       // Error is handled by the useEffect for persistence
       // console.error("Failed to add tag:", error?.message || "Unknown error"); // This is now handled by toast
       // The error toast is shown via the useEffect
-      if (!toastId.current && error) { // If for some reason the error happened without a loading toast
+      if (!toastId.current && error) {
+        // If for some reason the error happened without a loading toast
         toast.error(`Failed to add tag: ${error.message || "Unknown error"}`);
       }
     }

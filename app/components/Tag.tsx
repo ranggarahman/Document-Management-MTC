@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useDeleteTag } from "../hooks/useDeleteTag";
 import { toast } from "react-toastify"; // Import toast
+import { useAuth } from "../context/AuthContext";
 
 interface TagProps {
   name: string;
@@ -15,6 +16,7 @@ interface TagProps {
 export function Tag({ name, drawingId, onDelete }: TagProps) {
   const { deleteTag, isLoading, error } = useDeleteTag();
   const toastId = useRef<string | number | null>(null); // To keep track of the toast ID
+  const { isAdmin } = useAuth();
 
   // Use useEffect to react to changes in isLoading and error
   useEffect(() => {
@@ -92,27 +94,29 @@ export function Tag({ name, drawingId, onDelete }: TagProps) {
       {name}
 
       {/* The Delete Button */}
-      <button
-        // Use `group-hover` to make the button visible when the parent span is hovered
-        className="ml-2 -mr-1 p-0.5 rounded-full text-tenaris-purple bg-white opacity-75 hover:opacity-100 group-hover:opacity-100 transition-opacity"
-        onClick={handleDelete}
-        disabled={isLoading}
-        aria-label={`Remove tag ${name}`}
-      >
-        {/* Simple 'x' icon using SVG for crispness */}
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-3 w-3"
-          viewBox="0 0 20 20"
-          fill="currentColor"
+      {isAdmin && (
+        <button
+          // Use `group-hover` to make the button visible when the parent span is hovered
+          className="ml-2 -mr-1 p-0.5 rounded-full text-tenaris-purple bg-white opacity-75 hover:opacity-100 group-hover:opacity-100 transition-opacity"
+          onClick={handleDelete}
+          disabled={isLoading}
+          aria-label={`Remove tag ${name}`}
         >
-          <path
-            fillRule="evenodd"
-            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-            clipRule="evenodd"
-          />
-        </svg>
-      </button>
+          {/* Simple 'x' icon using SVG for crispness */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-3 w-3"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </button>
+      )}
     </span>
   );
 }

@@ -44,3 +44,42 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans-serif);
 }
+
+/* =============================================== */
+/* Custom Component Styles                         */
+/* =============================================== */
+
+/* Bouncing Dots Loader */
+.bouncing-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 200px;  /* Match your image container width */
+  height: 200px; /* Match your image container height */
+}
+
+.bouncing-dots div {
+  width: 1rem; /* 16px */
+  height: 1rem; /* 16px */
+  margin: 0 0.375rem; /* 6px */
+  border-radius: 50%;
+  background-color: var(--color-tenaris-gray-dark); /* Use your theme's dark gray */
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.bouncing-dots div:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.bouncing-dots div:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1.0);
+  }
+}
